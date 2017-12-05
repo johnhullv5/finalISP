@@ -138,7 +138,7 @@ public class MathOperatorService2 {
 	// use adjclose instead of close.
 	public static Observable<Pair<DateTime, Double>> CLOSE(Observable<Pair<DateTime, HisData>> data) {
 		return Observable.zip(data.map(p -> p.getLeft()),
-				data.map(p -> Double.parseDouble(p.getRight().getAdjClosePrice())), (t, p) -> new ImmutablePair(t, p));
+				data.map(p -> Double.parseDouble(p.getRight().getClosePrice())), (t, p) -> new ImmutablePair(t, p));
 	}
 
 	public static Observable<Pair<DateTime, Double>> HIGH(Observable<Pair<DateTime, HisData>> data) {

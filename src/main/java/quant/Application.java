@@ -1,11 +1,17 @@
 package quant;
 
 import java.text.DateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
+import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +27,15 @@ import org.springframework.web.bind.annotation.RestController;
 import quant.config.InputParameterSet;
 import quant.serviceImpl.LargerThanRule;
 import quant.serviceImpl.MathOperatorService2;
+import quant.serviceImpl.RESTdataReader;
+import quant.serviceImpl.RuleImplService;
+import rx.Observable;
+
+import quant.config.InputParameterSet;
+import quant.domain.HisData;
+import quant.serviceImpl.CrossDownRule;
+import quant.serviceImpl.CrossUpRule;
+
 import quant.serviceImpl.RuleImplService;
 import com.google.gson.Gson;
 
@@ -76,16 +91,105 @@ public class Application {
     
     @RequestMapping("/GOOG")
 	public String signal() {
-		Gson gson = new Gson();
-		
-		//String json = gson.toJson(data);
-		return null;
+    	
+    		Gson gson = new Gson();
+    		Map<String, String> data = initData.get("GOOG").get("SMA");
+    		String json = gson.toJson(data);
+    		return json;
+    	
 	}
     
     @Bean
 	InitializingBean compute() {
 		return () -> {
-			
+			DateFormat df = getDateFormat;
+			//List<String> symbols = getSymbols;
+			List<String> symbols = new ArrayList<String>();
+			symbols.add("GOOG");
+			InputParameterSet params = getInputParameterSet;
+			DateTimeFormatter fmt = getDateTimeFormatter;
+			RuleImplService util = getRuleImplService;
+			RESTdataReader reader = new RESTdataReader();
+	    	Observable<Pair<DateTime, HisData>> data = reader.readOneSymbol(null, null);
+			MathOperatorService2 mathService = getMathOperatorService;
+
+//			long startTime_ = System.nanoTime();
+//
+			for (String symbol : symbols) {
+				long startTime = System.nanoTime();
+				try {
+
+					CrossRule bollRule = new CrossDownRule();
+//
+					Observable<Pair<DateTime, Double>> close = mathService.CLOSE(data).takeLast(params.getTake_N());
+
+					Observable<Pair<DateTime, Double>> high = mathService.HIGH(data).takeLast(params.getTake_N());
+
+					Observable<Pair<DateTime, Double>> low = mathService.LOW(data).takeLast(params.getTake_N());
+
+					Observable<Pair<DateTime, Double>> vol = mathService.VOLUME(data).takeLast(params.getTake_N());
+
+					Observable<Pair<DateTime, Double>> hoh = mathService.HOH(high, params.getWILL_N())
+							.takeLast(params.getTake_N());
+
+					Observable<Pair<DateTime, Double>> lol = mathService.LOL(low, params.getWILL_N())
+							.takeLast(params.getTake_N());
+
+					
+					
+					Observable<Pair<DateTime, Double>> sma = mathService.SMA(close, params.getSMA_N()).takeLast(params.getTake_N());
+					
+					
+
+
+
+					CrossUpRule smaRule = new CrossUpRule();
+
+					smaRule.setClose(close);
+
+					smaRule.setBase(sma);
+					
+					smaRule.setN(params.getSMA_N());
+
+					Observable<Pair<DateTime, Double>> smaSignal = smaRule.runRule2(util );
+
+
+
+					//List<Pair<DateTime, Double>> smaList = william.toList().toBlocking().single();
+
+					List<Pair<DateTime, Double>> smaSignalList = smaSignal.toList().toBlocking().single();
+
+
+
+
+					Map<String, String> SMACrossUpMap = new TreeMap<String, String>();
+
+
+					
+
+
+					for (int i = 0; i < smaSignalList.size(); i++) {
+						Pair<DateTime, Double> pair = smaSignalList.get(i);
+						SMACrossUpMap.put(pair.getKey().toString(fmt), String.format("%.2f", pair.getValue()));
+					}
+
+
+					Map<String, Map<String, String>> ruleMap = new HashMap<String, Map<String, String>>();
+
+
+					ruleMap.put("SMA", SMACrossUpMap);
+
+					initData.put(symbol, ruleMap);
+
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				;
+
+				long endtime = System.nanoTime();
+				System.out.println(symbol + " run with " + (endtime - startTime));
+
+			}
 		};
     }
 

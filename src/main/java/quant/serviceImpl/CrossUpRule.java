@@ -14,20 +14,32 @@ public class CrossUpRule implements CrossRule {
 	
 	private Observable<Pair<DateTime, Double>> base;
 	
+	private int N;
 	
 	
+	
+
+	public int getN() {
+		return N;
+	}
+
+
+	public void setN(int n) {
+		N = n;
+	}
+
 
 	@Override
 	public Observable<Pair<DateTime, Double>> runRule(RuleImplService ruleUtils) {
 		// TODO Auto-generated method stub
-		return ruleUtils.crossUP2(this.close, this.base);
+		return ruleUtils.crossUP2(this.close, this.base,N);
 	}
 	
 	
 	@Override
 	public Observable<Pair<DateTime, Double>> runRule2(RuleImplService ruleUtils) {
 		// TODO Auto-generated method stub
-		return ruleUtils.crossUP2(this.close, this.base);
+		return ruleUtils.crossUP2(this.close, this.base,N);
 	}
 
 	@Override

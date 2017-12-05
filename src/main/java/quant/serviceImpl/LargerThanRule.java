@@ -30,7 +30,9 @@ public class LargerThanRule implements CrossRule {
 		Observable<Double> o = this.first.map(x->this.line1);
 		Observable<Double> o2 = this.first.map(x->this.line2);
 		Observable<Pair<DateTime, Double>> line1 = Observable.zip(timeStamp, o,(a1,a2)->new ImmutablePair(a1,a2));
-		return ruleUtils.crossUP2(this.first, line1);
+		
+		// need to test!!!!
+		return ruleUtils.crossUP2(this.first, line1,10);
 		
 
 	}
@@ -45,7 +47,8 @@ public class LargerThanRule implements CrossRule {
 		Observable<Pair<DateTime, Double>> line1 = Observable.zip(timeStamp, o,(a1,a2)->new ImmutablePair(a1,a2));
 		Observable<Pair<DateTime, Double>> line2 = Observable.zip(timeStamp, o2,(a1,a2)->new ImmutablePair(a1,a2));
 		
-		Observable<Pair<DateTime, Double>> result = ruleUtils.crossUP2(this.first, line1).mergeWith(ruleUtils.crossUP2(this.first, line2));
+		// need to test!!!! 0 is hard coded.
+		Observable<Pair<DateTime, Double>> result = ruleUtils.crossUP2(this.first, line1,0).mergeWith(ruleUtils.crossUP2(this.first, line2,0));
 		
 
 		

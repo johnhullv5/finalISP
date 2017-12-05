@@ -48,19 +48,22 @@ public class RuleImplService {
 	}
 
 	public static Observable<Pair<DateTime, Double>> crossUP2(Observable<Pair<DateTime, Double>> close,
-			Observable<Pair<DateTime, Double>> benchmark) {
+			Observable<Pair<DateTime, Double>> benchmark,int N) {
 
-		Observable<Pair<DateTime, Double>> diff = close.filter(x -> !x.getRight().isNaN()).zipWith(
+		Observable<Pair<DateTime, Double>> diff = close.skip(N-1).filter(x -> !x.getRight().isNaN()).zipWith(
 				benchmark.filter(x -> !x.getRight().isNaN()),
 				(c, i) -> new ImmutablePair(c.getLeft(), (c.getRight() - i.getRight())));
+		//return diff;
 
 		Observable<Pair<DateTime, Double>> diff_v = diff.map(b -> {
-			double v = (b.getRight() >= 0) ? 1.0 : (-1.0);
+			double v = (b.getRight() > 0) ? 1.0 : (-1.0);
 			return new ImmutablePair(b.getLeft(), v);
 		});
-
-		Observable<Pair<DateTime, Double>> diff_map = diff_v.window(2, 1).skipLast(1)
-				.flatMap(win -> win.reduce((s, c) -> new ImmutablePair(c.getLeft(), c.getRight() - s.getRight())));
+		
+		//return diff_v;
+//
+		Observable<Pair<DateTime, Double>> diff_map = diff_v.window(2, 1).skipLast(1).flatMap(win -> win.reduce((s, c) -> new ImmutablePair(c.getLeft(), c.getRight() - s.getRight())));
+//		return diff_map;
 		return diff_map.filter(x -> x.getRight() > 0);
 
 	}
